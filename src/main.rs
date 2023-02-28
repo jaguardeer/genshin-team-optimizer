@@ -3,7 +3,6 @@ use std::env; // for cwd
 use std::fs::File;
 use std::io::prelude::*;
 use std::path::Path;
-use std::collections::HashMap;
 
 
 // JSON stuff adapted from https://blog.logrocket.com/json-and-rust-why-serde_json-is-the-top-choice/
@@ -143,8 +142,12 @@ fn main() -> std::io::Result<()> {
 	// parse db JSON (unstructured)
 	let dbPath = "./data/data.min.json";
 	let dbJsonString = readFile(dbPath);
-	let db: serde_json::Value = serde_json::from_str(&dbJsonString).unwrap();
+	// todo: more concise type I can use?
+	let db: serde_json::Map<String, serde_json::Value> = serde_json::from_str(&dbJsonString).unwrap();
 	println!("{}", db["stats"]["weapons"]["dullblade"]["base"]["attack"]);
+	for k in db.keys() {
+		println!("{}", k);
+	}
 	//println!("db keys are {}", db.keys());
 	Ok(()) // todo: what's this do?
 }

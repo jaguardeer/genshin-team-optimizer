@@ -1,3 +1,4 @@
+#![allow(non_snake_case, non_camel_case_types, dead_code)] // todo: temp, learn proper fix (serde variant attributes)
 use serde::{Deserialize, Serialize}; // json crate
 use std::env; // for cwd
 use std::fs::File;
@@ -11,7 +12,7 @@ use std::path::Path;
 
 //****** EXTERNALLY MANDATED DATA LAYOUTS
 
-// GOOD Format: https://frzyc.github.io/genshin-optimizer/#/doc
+//****** GOOD Format: https://frzyc.github.io/genshin-optimizer/#/doc
 #[derive(Debug, Deserialize, Serialize)]
 struct Substat {
 	key: String,
@@ -131,9 +132,10 @@ struct EnemyCurves {
 
 #[derive(Debug, Deserialize, Serialize)]
 struct CurveDB {
-	characters: Vec<CharacterCurves>,//[CharacterCurves; 100],
-	weapons: Vec<WeaponCurves>,//[WeaponCurves; 100],
-	enemies: Vec<EnemyCurves>,//[EnemyCurves; 200],
+	// todo: do I really have to use hashmap? the db json uses (int-as-string, value) pairs to represent an array
+	characters:  std::collections::HashMap<i64, CharacterCurves>,//[CharacterCurves; 100],
+	weapons:  std::collections::HashMap<i64, WeaponCurves>,//[WeaponCurves; 100],
+	enemies:  std::collections::HashMap<i64, EnemyCurves>,//[EnemyCurves; 200],
 }
 
 // todo: all fields are Value until I can decide what they really are
@@ -141,7 +143,7 @@ struct CurveDB {
 struct GenshinDatabase {
 	data: serde_json::Value,
 	image: serde_json::Value,
-	curve: serde_json::Value,//CurveDB, todo
+	curve: CurveDB,// todo
 	version: serde_json::Value,
 	index: serde_json::Value,
 	stats: serde_json::Value,
@@ -233,19 +235,13 @@ fn main() -> std::io::Result<()> {
 	let goodData: GOODData = serde_json::from_str(&artifactJsonString).unwrap();
 	println!("First artifact is: {}", serde_json::to_string(&goodData.artifacts[0])?);
 
-	// parse db JSON (unstructured)
+	// parse db JSON 
 	let dbPath = "./data/data.min.json";
 	let dbJsonString = readFile(dbPath);
+
 	// todo: more concise type I can use?
-	//let db: serde_json::Map<String, serde_json::Value> = serde_json::from_str(&dbJsonString).unwrap();
 	let db: GenshinDatabase = serde_json::from_str(&dbJsonString).unwrap();
 	println!("{}", db.stats["weapons"]["dullblade"]["base"]["attack"]);
-	//println!("{}", db.curve.characters[1].GROW_CURVE_HP_S4);
-	/*
-	for k in db.keys() {
-		println!("{}", k);
-	}
-	*/
-	//println!("db keys are {}", db.keys());
+	println!("{}", db.curve.characters[&5].GROW_CURVE_HP_S4);
 	Ok(()) // todo: what's this do?
 }

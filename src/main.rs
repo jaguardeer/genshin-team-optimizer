@@ -211,16 +211,10 @@ fn readFile(filename: &str) -> String {
 	let path = Path::new(&filename);
 	let display = path.display();
 	// Open the path in read-only mode, returns `io::Result<File>`
-	let mut file = match File::open(&path) {
-		Err(why) => panic!("couldn't open {}: {}", display, why),
-		Ok(file) => file,
-	};
+	let mut file = File::open(&path).unwrap_or_else(|why| panic!("couldn't open {}: {}", display, why));
 	// Read the file contents into a string, returns `io::Result<usize>`
 	let mut jsonString = String::new();
-	match file.read_to_string(&mut jsonString) {
-		Err(why) => panic!("couldn't read {}: {}", display, why),
-		Ok(_) => (),
-	}
+	file.read_to_string(&mut jsonString).unwrap_or_else(|why| panic!("couldn't read {}: {}", display, why));
 	return jsonString;
 }
 
@@ -245,8 +239,7 @@ fn main() -> std::io::Result<()> {
 	let db: GenshinDatabase = serde_json::from_str(&dbJsonString).unwrap();
 	println!("{}", db.stats["weapons"]["dullblade"]["base"]["attack"]);
 	println!("{}", db.curve.characters[&1].GROW_CURVE_HP_S4);
-	let foo = &db.curve.characters[&0]; // todo: learn borrowing
-	println!("ok");
+	let foo = &db.curve.characters[&1]; // todo: learn borrowing
 	println!("{}", foo.GROW_CURVE_HP_S4);
 	match db.curve.characters.get(&0) {
 		None => panic!("couldn't get it"),

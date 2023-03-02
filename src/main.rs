@@ -196,13 +196,15 @@ struct Character {
 
 }
 
-/*
+
 // see wiki for formulas:
 // https://genshin-impact.fandom.com/wiki/Damage
 fn calcDamage() {
 
 }
-*/
+
+//fn calculateStat()
+
 
 fn readFile(filename: &str) -> String {
 	// following section from https://doc.rust-lang.org/rust-by-example/std_misc/file/open.html
@@ -242,6 +244,13 @@ fn main() -> std::io::Result<()> {
 	// todo: more concise type I can use?
 	let db: GenshinDatabase = serde_json::from_str(&dbJsonString).unwrap();
 	println!("{}", db.stats["weapons"]["dullblade"]["base"]["attack"]);
-	println!("{}", db.curve.characters[&5].GROW_CURVE_HP_S4);
+	println!("{}", db.curve.characters[&1].GROW_CURVE_HP_S4);
+	let foo = &db.curve.characters[&0]; // todo: learn borrowing
+	println!("ok");
+	println!("{}", foo.GROW_CURVE_HP_S4);
+	match db.curve.characters.get(&0) {
+		None => panic!("couldn't get it"),
+		Some(curve) => println!("val is {}", curve.GROW_CURVE_HP_S4),
+	}
 	Ok(()) // todo: what's this do?
 }

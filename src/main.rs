@@ -15,7 +15,7 @@ use std::path::Path;
 //****** GOOD Format: https://frzyc.github.io/genshin-optimizer/#/doc
 #[derive(Debug, Deserialize, Serialize)]
 struct Substat {
-	key: String,
+	key: StatKey,
 	value: f32,
 }
 
@@ -24,7 +24,7 @@ struct Artifact {
 	name: String,
 	level: usize,
 	rarity: usize,
-	mainStatKey: String,
+	mainStatKey: StatKey,
 	location: String,
 	lock: bool,
 	substats: Vec<Substat>,//array
@@ -39,6 +39,30 @@ struct GOODData {
 	source: String,
 	version: usize,
 	artifacts: Vec<Artifact>
+}
+
+// todo: can I separate MainStat and Substat keys?
+#[derive(Debug, Deserialize, Serialize, Copy, Clone)]
+enum StatKey {
+	hp,	 				//HP
+	hp_,	 			//HP%
+	atk,	 			//ATK
+	atk_,	 			//ATK%
+	def,	 			//DEF
+	def_,	 			//DEF%
+	eleMas,	 			//Elemental Mastery
+	enerRech_,	 		//Energy Recharge%
+	heal_,	 			//Healing Bonus%
+	critRate_,	 		//Crit Rate
+	critDMG_,	 		//Crit DMG%
+	physical_dmg_,	 	//Physical DMG Bonus%
+	anemo_dmg_,	 		//Anemo DMG Bonus%
+	geo_dmg_,	 		//Geo DMG Bonus%
+	electro_dmg_,	 	//Electro DMG Bonus%
+	hydro_dmg_,	 		//Hydro DMG Bonus%
+	pyro_dmg_,	 		//Pyro DMG Bonus%
+	cryo_dmg_,	 		//Cryo DMG Bonus%
+	dendro_dmg_,	 	//Dendro DMG Bonus%
 }
 
 
@@ -151,14 +175,12 @@ struct GenshinDatabase {
 }
 
 
-
-
-
-//****** MY STRUCTS
+// ****** MY STRUCTS
 // goal of this struct is to enable stuff like:
 // todo: use flags system? pyro | burst | vape
 // stats = arti1 + arti2 + raiden_e
 // calcDamage(600%, atk, pyro, burst)
+#[derive(Debug, Default, Copy, Clone)]
 struct StatBlock {
 	// todo: f32 sufficient for all fields?
 	// naming convention follows GOOD format
@@ -190,6 +212,44 @@ struct StatBlock {
 	skill_dmg_: f32,		// Skill DMG Bonus%
 	burst_dmg_: f32,		// Normal Attack DMG Bonus%
 	all_dmg_: f32,			// All DMG Bonus%
+}
+
+fn setField(statBlock: &mut StatBlock, key: StatKey, val: f32) {
+	match key {
+		StatKey::hp => statBlock.hp = val,
+		StatKey::hp_ => statBlock.hp_ = val,
+		StatKey::atk => statBlock.atk = val,
+		StatKey::atk_ => statBlock.atk_ = val,
+		StatKey::def => statBlock.def = val,
+		StatKey::def_ => statBlock.def_ = val,
+		StatKey::eleMas => statBlock.eleMas = val,
+		StatKey::enerRech_ => statBlock.enerRech_ = val,
+		StatKey::heal_ => statBlock.heal_ = val,
+		StatKey::critRate_ => statBlock.critRate_ = val,
+		StatKey::critDMG_ => statBlock.critDMG_ = val,
+		StatKey::physical_dmg_ => statBlock.physical_dmg_ = val,
+		StatKey::anemo_dmg_ => statBlock.anemo_dmg_ = val,
+		StatKey::geo_dmg_ => statBlock.geo_dmg_ = val,
+		StatKey::electro_dmg_ => statBlock.electro_dmg_ = val,
+		StatKey::hydro_dmg_ => statBlock.hydro_dmg_ = val,
+		StatKey::pyro_dmg_ => statBlock.pyro_dmg_ = val,
+		StatKey::cryo_dmg_ => statBlock.cryo_dmg_ = val,
+		StatKey::dendro_dmg_ => statBlock.dendro_dmg_ = val,
+	}
+}
+
+fn getMainstatValue(mainStatKey: StatKey, level: i8) {
+
+}
+
+fn statBlockFromGoodArtifact(goodArtifact: &Artifact) -> StatBlock {
+	println!("hey");
+	let mut block = StatBlock::default();
+	setField(&mut block, goodArtifact.mainStatKey, 1337.0);
+	for substat in &goodArtifact.substats {
+		setField(&mut block, substat.key, substat.value);
+	}
+	return block;
 }
 
 struct Character {
@@ -231,6 +291,11 @@ fn main() -> std::io::Result<()> {
 	let goodData: GOODData = serde_json::from_str(&artifactJsonString).unwrap();
 	println!("First artifact is: {}", serde_json::to_string(&goodData.artifacts[0])?);
 
+
+	// test StatBlock stuff
+	let x = statBlockFromGoodArtifact(&goodData.artifacts[0]);
+	println!("{:?}", x);
+
 	// parse db JSON 
 	let dbPath = "./data/data.min.json";
 	let dbJsonString = readFile(dbPath);
@@ -245,5 +310,8 @@ fn main() -> std::io::Result<()> {
 		None => panic!("couldn't get it"),
 		Some(curve) => println!("val is {}", curve.GROW_CURVE_HP_S4),
 	}
+
+
+
 	Ok(()) // todo: what's this do?
 }

@@ -180,6 +180,8 @@ struct GenshinDatabase {
 // todo: use flags system? pyro | burst | vape
 // stats = arti1 + arti2 + raiden_e
 // calcDamage(600%, atk, pyro, burst)
+use std::ops::Add;
+
 #[derive(Debug, Default, Copy, Clone)]
 struct StatBlock {
 	// todo: f32 sufficient for all fields?
@@ -212,6 +214,39 @@ struct StatBlock {
 	skill_dmg_: f32,		// Skill DMG Bonus%
 	burst_dmg_: f32,		// Normal Attack DMG Bonus%
 	all_dmg_: f32,			// All DMG Bonus%
+}
+
+impl Add for StatBlock {
+	type Output = StatBlock;
+
+	fn add(self, other: StatBlock) -> StatBlock {
+		StatBlock {
+			hp: self.hp + other.hp,
+			hp_: self.hp_ + other.hp_,
+			atk: self.atk + other.atk,
+			atk_: self.atk_ + other.atk_,
+			def: self.def + other.def,
+			def_: self.def_ + other.def_,
+			eleMas: self.eleMas + other.eleMas,
+			enerRech_: self.enerRech_ + other.enerRech_,
+			heal_: self.heal_ + other.heal_,
+			critRate_: self.critRate_ + other.critRate_,
+			critDMG_: self.critDMG_ + other.critDMG_,
+			physical_dmg_: self.physical_dmg_ + other.physical_dmg_,
+			anemo_dmg_: self.anemo_dmg_ + other.anemo_dmg_,
+			geo_dmg_: self.geo_dmg_ + other.geo_dmg_,
+			electro_dmg_: self.electro_dmg_ + other.electro_dmg_,
+			hydro_dmg_: self.hydro_dmg_ + other.hydro_dmg_,
+			pyro_dmg_: self.pyro_dmg_ + other.pyro_dmg_,
+			cryo_dmg_: self.cryo_dmg_ + other.cryo_dmg_,
+			dendro_dmg_: self.dendro_dmg_ + other.dendro_dmg_,
+			normal_dmg_: self.normal_dmg_ + other.normal_dmg_,
+			charged_dmg_: self.charged_dmg_ + other.charged_dmg_,
+			skill_dmg_: self.skill_dmg_ + other.skill_dmg_,
+			burst_dmg_: self.burst_dmg_ + other.burst_dmg_,
+			all_dmg_: self.all_dmg_ + other.all_dmg_,
+		}
+	}
 }
 
 fn setField(statBlock: &mut StatBlock, key: StatKey, val: f32) {

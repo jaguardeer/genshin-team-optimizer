@@ -38,7 +38,7 @@ struct Artifact {
 	substats: Vec<Substat>,//array
 	frameIndex: usize,
 	setKey: String,
-	slotKey: String
+	slotKey: SlotKey
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -73,6 +73,14 @@ enum StatKey {
 	dendro_dmg_,	 	//Dendro DMG Bonus%
 }
 
+#[derive(Debug, Deserialize, Serialize, Copy, Clone, PartialEq, PartialOrd, Ord, Eq, Hash)]
+enum SlotKey {
+	flower,
+	plume,
+	sands,
+	goblet,
+	circlet
+}
 
 //****** GENSHIN DATABASE FORMAT: https://github.com/theBowja/genshin-db
 // CURVE SECTION
@@ -286,7 +294,7 @@ fn getMainstatValue(mainStatKey: StatKey, level: i8) {
 }
 
 fn statBlockFromGoodArtifact(goodArtifact: &Artifact) -> StatBlock {
-	println!("hey");
+	//println!("hey");
 	let mut block = StatBlock::default();
 	setField(&mut block, goodArtifact.mainStatKey, 1337.0);
 	for substat in &goodArtifact.substats {
@@ -335,7 +343,7 @@ fn main() -> std::io::Result<()> {
 	println!("First artifact is: {}", serde_json::to_string(&goodData.artifacts[0])?);
 
 	// select 5 star artis only
-	let mut artifacts: Vec<_> = goodData.artifacts.into_iter()
+	let mut artifacts: Vec<_> = goodData.artifacts.iter()
 		.filter(|a| a.rarity == 5)
 		.collect();
 	// sort by slot
@@ -344,16 +352,39 @@ fn main() -> std::io::Result<()> {
 	let artifacts: HashMap<_, _> = artifacts.iter()
 		.group_by(|arti| &arti.slotKey)
 		.into_iter()
-		.map(|(k, g)| (k, g.collect::<Vec<_>>()))
+		.map(|(k, g)| (k, g.map(|arti| statBlockFromGoodArtifact(&arti)).collect::<Vec<_>>()))
 		.collect();
-	/*
-	for (key, grp) in &artifacts.iter().group_by(|arti| &arti.slotKey) {
-		println!("{key}: {}", grp.count());
+	// debug: print
+	for (k, v) in &artifacts {
+		println!("{k:?}: {:?}", v.len());
 	}
-	*/
-	for (k, v) in artifacts {
-		println!("{k}: {:?}", v.len());
+	//let x = artifacts.get(&SlotKey::sands).unwrap();
+	//println!("{:?}", x[0]);
+	// calc combinations BIG todo
+	use std::time::{Instant};
+	let startTime = Instant::now();
+	let mut i: usize = 0;
+	let mut bestStats = StatBlock::default();
+	for s in &artifacts[&SlotKey::sands] {
+		for c in &artifacts[&SlotKey::circlet] {
+			for p in &artifacts[&SlotKey::plume] {
+				for f in &artifacts[&SlotKey::flower] {
+					for g in &artifacts[&SlotKey::goblet] {
+						let stats = *s + *c + *p + *f + *g;
+						if stats.atk_ > bestStats.atk {
+							bestStats = stats;
+						}
+						i += 1;
+						if i % 100_000_000 == 0 { println!("{i}") }
+					}
+				}
+			}
+		}
 	}
+
+	println!("{:?}", bestStats);
+	println!("{i} combinations took {:.7}", startTime.elapsed().as_secs_f64());
+	
 	/*
 	let artiGroups: HashMap<_, Vec<_>> = artifacts.iter()
 		.group_by(|arti| arti.slotKey)

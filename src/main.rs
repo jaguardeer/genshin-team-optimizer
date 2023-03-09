@@ -1,14 +1,17 @@
-#![allow(non_snake_case, non_camel_case_types, dead_code)] // todo: temp, learn proper fix (serde variant attributes)
+#![allow(non_snake_case, non_camel_case_types, dead_code, unused_imports)] // todo: temp, learn proper fix (serde variant attributes)
 use serde::{Deserialize, Serialize}; // json crate
 use std::env; // for cwd
 use std::fs::File;
 use std::io::prelude::*;
 use std::path::Path;
+use std::collections::HashMap;
+use itertools::Itertools;
 
 
 // JSON stuff adapted from https://blog.logrocket.com/json-and-rust-why-serde_json-is-the-top-choice/
 // todo: figure out how to toggle lint warnings (#[allow(non_snake_case)]) OR use https://serde.rs/variant-attrs.html
 // todo: String in these structs should be an enum
+// todo: StatBlock can be implemented as a macro
 
 //****** EXTERNALLY MANDATED DATA LAYOUTS
 
@@ -323,20 +326,37 @@ fn main() -> std::io::Result<()> {
 	// parse artifact JSON
 	let artifactPath = "./data/2023-01-15 15-31-44.ocr3.json";
 	let artifactJsonString = readFile(artifactPath);
-	let goodData: GOODData = serde_json::from_str(&artifactJsonString).unwrap();
+	let goodData: GOODData = serde_json::from_str(&artifactJsonString).expect("parsing artifacts");
 	println!("First artifact is: {}", serde_json::to_string(&goodData.artifacts[0])?);
 
-
+	// select 5 star artis only
+	let mut artifacts: Vec<_> = goodData.artifacts.into_iter()
+		.filter(|a| a.rarity == 5)
+		.collect();
+	// sort by slot
+	artifacts.sort_unstable_by(|a, b| b.slotKey.cmp(&a.slotKey));
+	// groupby slot (todo: can i use map() or similiar instead of for loop?)
+	for (key, grp) in &artifacts.iter().group_by(|arti| &arti.slotKey) {
+		println!("{key}: {}", grp.count());
+	}
+	/*
+	let artiGroups: HashMap<_, Vec<_>> = artifacts.iter()
+		.group_by(|arti| arti.slotKey)
+        .into_iter()
+		.map(|(ge0, group)| (ge0, group.cloned().collect()))
+    	.collect();
+	println!("{:?}", artiGroups);
+	*/
 	// test StatBlock stuff
-	let x = statBlockFromGoodArtifact(&goodData.artifacts[0]);
-	println!("{:?}", x);
+	//let x = statBlockFromGoodArtifact(&goodData.artifacts[0]);
+	//println!("{:?}", x);
 
 	// parse db JSON 
 	let dbPath = "./data/data.min.json";
 	let dbJsonString = readFile(dbPath);
 
 	// todo: more concise type I can use?
-	let db: GenshinDatabase = serde_json::from_str(&dbJsonString).unwrap();
+	let db: GenshinDatabase = serde_json::from_str(&dbJsonString).expect("parsing GenshinDatabase JSON");
 	println!("{}", db.stats["weapons"]["dullblade"]["base"]["attack"]);
 	println!("{}", db.curve.characters[&1].GROW_CURVE_HP_S4);
 	let foo = &db.curve.characters[&1]; // todo: learn borrowing
@@ -346,7 +366,5 @@ fn main() -> std::io::Result<()> {
 		Some(curve) => println!("val is {}", curve.GROW_CURVE_HP_S4),
 	}
 
-
-
-	Ok(()) // todo: what's this do?
+	Ok(())
 }

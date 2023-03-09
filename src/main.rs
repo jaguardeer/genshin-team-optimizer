@@ -10,6 +10,7 @@ use itertools::Itertools;
 // todo: learn Rust fundamentals
 // 	- lifetimes
 // 	- ownership
+// 	- what is borrowing?
 
 
 // JSON stuff adapted from https://blog.logrocket.com/json-and-rust-why-serde_json-is-the-top-choice/
@@ -340,8 +341,18 @@ fn main() -> std::io::Result<()> {
 	// sort by slot
 	artifacts.sort_unstable_by(|a, b| b.slotKey.cmp(&a.slotKey));
 	// groupby slot (todo: can i use map() or similiar instead of for loop?)
+	let artifacts: HashMap<_, _> = artifacts.iter()
+		.group_by(|arti| &arti.slotKey)
+		.into_iter()
+		.map(|(k, g)| (k, g.collect::<Vec<_>>()))
+		.collect();
+	/*
 	for (key, grp) in &artifacts.iter().group_by(|arti| &arti.slotKey) {
 		println!("{key}: {}", grp.count());
+	}
+	*/
+	for (k, v) in artifacts {
+		println!("{k}: {:?}", v.len());
 	}
 	/*
 	let artiGroups: HashMap<_, Vec<_>> = artifacts.iter()

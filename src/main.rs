@@ -7,6 +7,10 @@ use std::path::Path;
 use std::collections::HashMap;
 use itertools::Itertools;
 
+// todo: learn Rust fundamentals
+// 	- lifetimes
+// 	- ownership
+
 
 // JSON stuff adapted from https://blog.logrocket.com/json-and-rust-why-serde_json-is-the-top-choice/
 // todo: figure out how to toggle lint warnings (#[allow(non_snake_case)]) OR use https://serde.rs/variant-attrs.html

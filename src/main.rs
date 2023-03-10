@@ -173,9 +173,53 @@ struct EnemyCurves {
 #[derive(Debug, Deserialize, Serialize)]
 struct CurveDB {
 	// todo: do I really have to use hashmap? the db json uses (int-as-string, value) pairs to represent an array
-	characters:  std::collections::HashMap<i64, CharacterCurves>,//[CharacterCurves; 100],
-	weapons:  std::collections::HashMap<i64, WeaponCurves>,//[WeaponCurves; 100],
-	enemies:  std::collections::HashMap<i64, EnemyCurves>,//[EnemyCurves; 200],
+	characters:  HashMap<i64, CharacterCurves>,//[CharacterCurves; 100],
+	weapons:  HashMap<i64, WeaponCurves>,//[WeaponCurves; 100],
+	enemies:  HashMap<i64, EnemyCurves>,//[EnemyCurves; 200],
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+struct StatsDB {
+	characters: serde_json::Value, 
+	weapons: serde_json::Value, 
+	talents: serde_json::Value, 
+	enemies: serde_json::Value, 
+}
+
+enum SpecializedKey {
+	FIGHT_PROP_CRITICAL_HURT,
+	FIGHT_PROP_HEAL_ADD,
+	FIGHT_PROP_ATTACK_PERCENT,
+	FIGHT_PROP_ELEMENT_MASTERY,
+	FIGHT_PROP_HP_PERCENT,
+	FIGHT_PROP_CHARGE_EFFICIENCY,
+	FIGHT_PROP_CRITICAL,
+	FIGHT_PROP_PHYSICAL_ADD_HURT,
+	FIGHT_PROP_ELEC_ADD_HURT,
+	FIGHT_PROP_ROCK_ADD_HURT,
+	FIGHT_PROP_FIRE_ADD_HURT,
+	FIGHT_PROP_WATER_ADD_HURT,
+	FIGHT_PROP_DEFENSE_PERCENT,
+	FIGHT_PROP_ICE_ADD_HURT,
+	FIGHT_PROP_WIND_ADD_HURT,
+	FIGHT_PROP_GRASS_ADD_HURT,
+}
+
+struct PromotionEntry {
+	maxlevel: i32,
+	hp: f32,
+	attack: f32,
+	defense: f32,
+	specialized: f32,
+}
+
+// TODO
+#[derive(Debug, Deserialize, Serialize)]
+struct CharacterEntry {
+	base: serde_json::Value,
+	curve: serde_json::Value,
+	specialized: serde_json::Value,
+	promotion: serde_json::Value//PromotionEntry,
 }
 
 // todo: all fields are Value until I can decide what they really are
@@ -186,7 +230,7 @@ struct GenshinDatabase {
 	curve: CurveDB,// todo
 	version: serde_json::Value,
 	index: serde_json::Value,
-	stats: serde_json::Value,
+	stats: StatsDB,
 	url: serde_json::Value,
 }
 
@@ -230,6 +274,10 @@ struct StatBlock {
 	skill_dmg_: f32,		// Skill DMG Bonus%
 	burst_dmg_: f32,		// Normal Attack DMG Bonus%
 	all_dmg_: f32,			// All DMG Bonus%
+	// base stats todo: should this be in here or in a different struct?
+	base_hp: f32,
+	base_atk: f32,
+	base_def: f32,
 }
 
 impl Add for StatBlock {
@@ -261,6 +309,9 @@ impl Add for StatBlock {
 			skill_dmg_: self.skill_dmg_ + other.skill_dmg_,
 			burst_dmg_: self.burst_dmg_ + other.burst_dmg_,
 			all_dmg_: self.all_dmg_ + other.all_dmg_,
+			base_hp: self.base_hp + other.base_hp,
+			base_atk: self.base_atk + other.base_atk,
+			base_def: self.base_def + other.base_def,
 		}
 	}
 }
@@ -303,9 +354,42 @@ fn statBlockFromGoodArtifact(goodArtifact: &Artifact) -> StatBlock {
 	return block;
 }
 
-struct Character {
+// todo
+struct CharacterBase {
+/*
+	baseStats: BaseStats,
+	curveTypes: CurveTypes,
+	specialType: StatKey,
+	promotionStats: PromotionStats,
+*/
+}
+
+struct BaseStats {
+	hp: f32,
+	atk: f32,
+	def: f32,
+	critRate_: f32,
+	critDMG_: f32,
+}
+
+struct CurveTypes {
+	hp: CharacterCurveType,
+	atk: CharacterCurveType,
+	def: CharacterCurveType,
+}
+
+struct CharacterInstance {
+	level: i32,
+	characterBase: CharacterBase,
+}
+
+struct HitInfo {
 
 }
+
+/*
+baseStats = charStats + weaponStats
+*/
 
 
 // see wiki for formulas:
@@ -378,6 +462,7 @@ fn main() -> std::io::Result<()> {
 	for (k, v) in &artifacts {
 		println!("{k:?}: {:?}", v.len());
 	}
+	/*
 	//let x = artifacts.get(&SlotKey::sands).unwrap();
 	//println!("{:?}", x[0]);
 	// calc combinations BIG todo
@@ -401,10 +486,9 @@ fn main() -> std::io::Result<()> {
 			}
 		}
 	}
-
 	println!("{:?}", bestStats);
 	println!("{i} combinations took {:.7}", startTime.elapsed().as_secs_f64());
-	
+	*/
 	/*
 	let artiGroups: HashMap<_, Vec<_>> = artifacts.iter()
 		.group_by(|arti| arti.slotKey)
@@ -423,7 +507,7 @@ fn main() -> std::io::Result<()> {
 
 	// todo: more concise type I can use?
 	let db: GenshinDatabase = serde_json::from_str(&dbJsonString).expect("parsing GenshinDatabase JSON");
-	println!("{}", db.stats["weapons"]["dullblade"]["base"]["attack"]);
+	println!("{}", db.stats.weapons["dullblade"]["base"]["attack"]);
 	println!("{}", db.curve.characters[&1].GROW_CURVE_HP_S4);
 	let foo = &db.curve.characters[&1]; // todo: learn borrowing
 	println!("{}", foo.GROW_CURVE_HP_S4);

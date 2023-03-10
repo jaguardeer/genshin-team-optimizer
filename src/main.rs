@@ -329,12 +329,32 @@ fn readFile(filename: &str) -> String {
 	return jsonString;
 }
 
+fn calcEnemyDefence(enemyLevel: f32) -> f32 {
+	5.0 * enemyLevel + 500.0
+}
+
+fn calcDefenceMult(defence: f32, attackerLevel: f32) -> f32 {
+	defence / (defence + 5.0 * attackerLevel + 500.0)
+}
+
+fn calcResistMult(resistance: f32) -> f32 {
+	match resistance {
+		x if x < 0.0 	=> 1.0 - (resistance / 2.0),
+		x if x >= 0.75 	=> 1.0 / (4.0 * resistance + 1.0),
+		_ 				=> 1.0 - resistance,
+	}
+}
+
+fn example_xiangling() {
+	// skill level
+	// enemy stats
+}
+
 
 fn main() -> std::io::Result<()> {
+	// pwd
 	let path = env::current_dir()?;
 	println!("The current directory is {}", path.display());
-
-
 
 	// parse artifact JSON
 	let artifactPath = "./data/2023-01-15 15-31-44.ocr3.json";

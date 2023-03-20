@@ -1,5 +1,7 @@
 //****** GOOD Format: https://frzyc.github.io/genshin-optimizer/#/doc
 
+#![allow(non_snake_case, non_camel_case_types)]
+
 use serde::{Deserialize, Serialize}; // json crate
 
 #[derive(Debug, Deserialize, Serialize)]

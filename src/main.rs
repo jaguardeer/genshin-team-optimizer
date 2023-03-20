@@ -1,4 +1,4 @@
-#![allow(non_snake_case, non_camel_case_types, dead_code)] // todo: temp, learn proper fix (serde variant attributes)
+#![allow(dead_code)] // todo: temp, learn proper fix (serde variant attributes)
 use std::env; // for cwd
 use std::fs::File;
 use std::io::prelude::*;
@@ -33,6 +33,7 @@ use Genshin_Database::*;
 // calcDamage(600%, atk, pyro, burst)
 use std::ops::Add;
 
+#[allow(non_snake_case)] // naming convention follows GOOD format
 #[derive(Debug, Default, Copy, Clone)]
 struct StatBlock {
 	// todo: f32 sufficient for all fields?
@@ -107,72 +108,63 @@ impl Add for StatBlock {
 	}
 }
 
-fn setField(statBlock: &mut StatBlock, key: StatKey, val: f32) {
+fn set_field(stat_block: &mut StatBlock, key: StatKey, val: f32) {
 	match key {
-		StatKey::hp => statBlock.hp = val,
-		StatKey::hp_ => statBlock.hp_ = val,
-		StatKey::atk => statBlock.atk = val,
-		StatKey::atk_ => statBlock.atk_ = val,
-		StatKey::def => statBlock.def = val,
-		StatKey::def_ => statBlock.def_ = val,
-		StatKey::eleMas => statBlock.eleMas = val,
-		StatKey::enerRech_ => statBlock.enerRech_ = val,
-		StatKey::heal_ => statBlock.heal_ = val,
-		StatKey::critRate_ => statBlock.critRate_ = val,
-		StatKey::critDMG_ => statBlock.critDMG_ = val,
-		StatKey::physical_dmg_ => statBlock.physical_dmg_ = val,
-		StatKey::anemo_dmg_ => statBlock.anemo_dmg_ = val,
-		StatKey::geo_dmg_ => statBlock.geo_dmg_ = val,
-		StatKey::electro_dmg_ => statBlock.electro_dmg_ = val,
-		StatKey::hydro_dmg_ => statBlock.hydro_dmg_ = val,
-		StatKey::pyro_dmg_ => statBlock.pyro_dmg_ = val,
-		StatKey::cryo_dmg_ => statBlock.cryo_dmg_ = val,
-		StatKey::dendro_dmg_ => statBlock.dendro_dmg_ = val,
+		StatKey::hp => stat_block.hp = val,
+		StatKey::hp_ => stat_block.hp_ = val,
+		StatKey::atk => stat_block.atk = val,
+		StatKey::atk_ => stat_block.atk_ = val,
+		StatKey::def => stat_block.def = val,
+		StatKey::def_ => stat_block.def_ = val,
+		StatKey::eleMas => stat_block.eleMas = val,
+		StatKey::enerRech_ => stat_block.enerRech_ = val,
+		StatKey::heal_ => stat_block.heal_ = val,
+		StatKey::critRate_ => stat_block.critRate_ = val,
+		StatKey::critDMG_ => stat_block.critDMG_ = val,
+		StatKey::physical_dmg_ => stat_block.physical_dmg_ = val,
+		StatKey::anemo_dmg_ => stat_block.anemo_dmg_ = val,
+		StatKey::geo_dmg_ => stat_block.geo_dmg_ = val,
+		StatKey::electro_dmg_ => stat_block.electro_dmg_ = val,
+		StatKey::hydro_dmg_ => stat_block.hydro_dmg_ = val,
+		StatKey::pyro_dmg_ => stat_block.pyro_dmg_ = val,
+		StatKey::cryo_dmg_ => stat_block.cryo_dmg_ = val,
+		StatKey::dendro_dmg_ => stat_block.dendro_dmg_ = val,
 	}
 }
 
-fn getMainstatValue(mainStatKey: StatKey, level: i8) -> f32 {
-	let _ = (mainStatKey, level);
+fn get_mainstat_value(main_stat_key: StatKey, level: i8) -> f32 {
+	let _ = (main_stat_key, level);
 	todo!()
 }
 
-fn statBlockFromGoodArtifact(goodArtifact: &Artifact) -> StatBlock {
+// todo: that's a lot of references
+impl From<&&&GOOD_DB::Artifact> for StatBlock {
+	fn from(good_artifact: &&&Artifact) -> Self {
+		let mut block = StatBlock::default();
+		set_field(&mut block, good_artifact.mainStatKey, 1337.0);
+		for substat in &good_artifact.substats {
+			set_field(&mut block, substat.key, substat.value);
+		}
+		return block;
+	}
+}
+
+/*
+fn StatBlock_from_GOOD_Artifact(good_artifact: &Artifact) -> StatBlock {
 	//println!("hey");
 	let mut block = StatBlock::default();
-	setField(&mut block, goodArtifact.mainStatKey, 1337.0);
-	for substat in &goodArtifact.substats {
-		setField(&mut block, substat.key, substat.value);
+	set_field(&mut block, good_artifact.mainStatKey, 1337.0);
+	for substat in &good_artifact.substats {
+		set_field(&mut block, substat.key, substat.value);
 	}
 	return block;
 }
-
-// todo
-struct CharacterBase {
-/*
-	baseStats: BaseStats,
-	curveTypes: CurveTypes,
-	specialType: StatKey,
-	promotionStats: PromotionStats,
 */
-}
 
-struct BaseStats {
-	hp: f32,
-	atk: f32,
-	def: f32,
-	critRate_: f32,
-	critDMG_: f32,
-}
-
-struct CurveTypes {
-	hp: CharacterCurveType,
-	atk: CharacterCurveType,
-	def: CharacterCurveType,
-}
 
 struct CharacterInstance {
 	level: i32,
-	characterBase: CharacterBase,
+	character_base: CharacterBase,
 }
 
 struct HitInfo {
@@ -186,34 +178,34 @@ baseStats = charStats + weaponStats
 
 // see wiki for formulas:
 // https://genshin-impact.fandom.com/wiki/Damage
-fn calcDamage() {
+fn calc_damage() {
 
 }
 
 //fn calculateStat()
 
 
-fn readFile(filename: &str) -> String {
+fn read_file(filename: &str) -> String {
 	// following section from https://doc.rust-lang.org/rust-by-example/std_misc/file/open.html
 	let path = Path::new(&filename);
 	let display = path.display();
 	// Open the path in read-only mode, returns `io::Result<File>`
 	let mut file = File::open(&path).unwrap_or_else(|why| panic!("couldn't open {}: {}", display, why));
 	// Read the file contents into a string, returns `io::Result<usize>`
-	let mut jsonString = String::new();
-	file.read_to_string(&mut jsonString).unwrap_or_else(|why| panic!("couldn't read {}: {}", display, why));
-	return jsonString;
+	let mut json_string = String::new();
+	file.read_to_string(&mut json_string).unwrap_or_else(|why| panic!("couldn't read {}: {}", display, why));
+	return json_string;
 }
 
-fn calcEnemyDefence(enemyLevel: f32) -> f32 {
-	5.0 * enemyLevel + 500.0
+fn calc_enemy_defence(enemy_level: f32) -> f32 {
+	5.0 * enemy_level + 500.0
 }
 
-fn calcDefenceMult(defence: f32, attackerLevel: f32) -> f32 {
-	defence / (defence + 5.0 * attackerLevel + 500.0)
+fn calc_defence_mult(defence: f32, attacker_level: f32) -> f32 {
+	defence / (defence + 5.0 * attacker_level + 500.0)
 }
 
-fn calcResistMult(resistance: f32) -> f32 {
+fn calc_resist_mult(resistance: f32) -> f32 {
 	if resistance < 0.0 {
 		1.0 - (resistance / 2.0)
 	}
@@ -237,13 +229,13 @@ fn main() -> std::io::Result<()> {
 	println!("The current directory is {}", path.display());
 
 	// parse artifact JSON
-	let artifactPath = "./data/2023-01-15 15-31-44.ocr3.json";
-	let artifactJsonString = readFile(artifactPath);
-	let goodData: GOOD_Data = serde_json::from_str(&artifactJsonString).expect("parsing artifacts");
-	println!("First artifact is: {}", serde_json::to_string(&goodData.artifacts[0])?);
+	let artifact_path = "./data/2023-01-15 15-31-44.ocr3.json";
+	let artifact_json_string = read_file(artifact_path);
+	let good_data: GOOD_Data = serde_json::from_str(&artifact_json_string).expect("parsing artifacts");
+	println!("First artifact is: {}", serde_json::to_string(&good_data.artifacts[0])?);
 
 	// select 5 star artis only
-	let mut artifacts: Vec<_> = goodData.artifacts.iter()
+	let mut artifacts: Vec<_> = good_data.artifacts.iter()
 		.filter(|a| a.rarity == 5)
 		.collect();
 	// sort by slot
@@ -252,7 +244,7 @@ fn main() -> std::io::Result<()> {
 	let artifacts: HashMap<_, _> = artifacts.iter()
 		.group_by(|arti| &arti.slotKey)
 		.into_iter()
-		.map(|(k, g)| (k, g.map(|arti| statBlockFromGoodArtifact(&arti)).collect::<Vec<_>>()))
+		.map(|(k, g)| (k, g.map(|arti| StatBlock::from(&arti)).collect::<Vec<_>>()))
 		.collect();
 	// debug: print
 	for (k, v) in &artifacts {
@@ -298,11 +290,11 @@ fn main() -> std::io::Result<()> {
 	//println!("{:?}", x);
 
 	// parse db JSON 
-	let dbPath = "./data/data.min.json";
-	let dbJsonString = readFile(dbPath);
+	let db_path = "./data/data.min.json";
+	let db_json_string = read_file(db_path);
 
 	// todo: more concise type I can use?
-	let db: GenshinDatabase = serde_json::from_str(&dbJsonString).expect("parsing GenshinDatabase JSON");
+	let db: GenshinDatabase = serde_json::from_str(&db_json_string).expect("parsing GenshinDatabase JSON");
 	println!("{}", db.stats.weapons["dullblade"]["base"]["attack"]);
 	println!("{}", db.curve.characters[&1].GROW_CURVE_HP_S4);
 	println!("{:?}", db.stats.characters["diluc"]);

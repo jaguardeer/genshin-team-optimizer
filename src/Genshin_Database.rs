@@ -1,5 +1,6 @@
 //****** GENSHIN DATABASE FORMAT: https://github.com/theBowja/genshin-db
 
+#![allow(non_snake_case, non_camel_case_types)]
 
 use std::collections::HashMap;
 use serde::{Deserialize, Serialize}; // json crate
@@ -187,4 +188,29 @@ pub struct GenshinDatabase {
 	pub index: serde_json::Value,
 	pub stats: StatsDB,
 	pub url: serde_json::Value,
+}
+
+
+// todo
+pub struct CharacterBase {
+/*
+	baseStats: BaseStats,
+	curveTypes: CurveTypes,
+	specialType: StatKey,
+	promotionStats: PromotionStats,
+*/
+}
+
+pub struct BaseStats {
+	pub hp: f32,
+	pub atk: f32,
+	pub def: f32,
+	pub critRate_: f32,
+	pub critDMG_: f32,
+}
+
+pub struct CurveTypes {
+	pub hp: CharacterCurveType,
+	pub atk: CharacterCurveType,
+	pub def: CharacterCurveType,
 }

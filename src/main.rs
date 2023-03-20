@@ -1,5 +1,4 @@
-#![allow(non_snake_case, non_camel_case_types, dead_code, unused_imports)] // todo: temp, learn proper fix (serde variant attributes)
-use serde::{Deserialize, Serialize}; // json crate
+#![allow(non_snake_case, non_camel_case_types, dead_code)] // todo: temp, learn proper fix (serde variant attributes)
 use std::env; // for cwd
 use std::fs::File;
 use std::io::prelude::*;
@@ -20,219 +19,11 @@ use itertools::Itertools;
 
 //****** EXTERNALLY MANDATED DATA LAYOUTS
 
-//****** GOOD Format: https://frzyc.github.io/genshin-optimizer/#/doc
-#[derive(Debug, Deserialize, Serialize)]
-struct Substat {
-	key: StatKey,
-	value: f32,
-}
+mod GOOD_DB;
+use GOOD_DB::*;
+mod Genshin_Database;
+use Genshin_Database::*;
 
-#[derive(Debug, Deserialize, Serialize)]
-struct Artifact {
-	name: String,
-	level: usize,
-	rarity: usize,
-	mainStatKey: StatKey,
-	location: String,
-	lock: bool,
-	substats: Vec<Substat>,//array
-	frameIndex: usize,
-	setKey: String,
-	slotKey: SlotKey
-}
-
-#[derive(Debug, Deserialize, Serialize)]
-struct GOODData {
-	format: String,
-	source: String,
-	version: usize,
-	artifacts: Vec<Artifact>
-}
-
-// todo: can I separate MainStat and Substat keys?
-#[derive(Debug, Deserialize, Serialize, Copy, Clone)]
-enum StatKey {
-	hp,	 				//HP
-	hp_,	 			//HP%
-	atk,	 			//ATK
-	atk_,	 			//ATK%
-	def,	 			//DEF
-	def_,	 			//DEF%
-	eleMas,	 			//Elemental Mastery
-	enerRech_,	 		//Energy Recharge%
-	heal_,	 			//Healing Bonus%
-	critRate_,	 		//Crit Rate
-	critDMG_,	 		//Crit DMG%
-	physical_dmg_,	 	//Physical DMG Bonus%
-	anemo_dmg_,	 		//Anemo DMG Bonus%
-	geo_dmg_,	 		//Geo DMG Bonus%
-	electro_dmg_,	 	//Electro DMG Bonus%
-	hydro_dmg_,	 		//Hydro DMG Bonus%
-	pyro_dmg_,	 		//Pyro DMG Bonus%
-	cryo_dmg_,	 		//Cryo DMG Bonus%
-	dendro_dmg_,	 	//Dendro DMG Bonus%
-}
-
-#[derive(Debug, Deserialize, Serialize, Copy, Clone, PartialEq, PartialOrd, Ord, Eq, Hash)]
-enum SlotKey {
-	flower,
-	plume,
-	sands,
-	goblet,
-	circlet
-}
-
-//****** GENSHIN DATABASE FORMAT: https://github.com/theBowja/genshin-db
-// CURVE SECTION
-#[derive(Debug, Deserialize, Serialize)]
-enum WeaponCurveType {
-	GROW_CURVE_ATTACK_101,
-	GROW_CURVE_ATTACK_102,
-	GROW_CURVE_ATTACK_103,
-	GROW_CURVE_ATTACK_104,
-	GROW_CURVE_ATTACK_105,
-	GROW_CURVE_CRITICAL_101,
-	GROW_CURVE_ATTACK_201,
-	GROW_CURVE_ATTACK_202,
-	GROW_CURVE_ATTACK_203,
-	GROW_CURVE_ATTACK_204,
-	GROW_CURVE_ATTACK_205,
-	GROW_CURVE_CRITICAL_201,
-	GROW_CURVE_ATTACK_301,
-	GROW_CURVE_ATTACK_302,
-	GROW_CURVE_ATTACK_303,
-	GROW_CURVE_ATTACK_304,
-	GROW_CURVE_ATTACK_305,
-	GROW_CURVE_CRITICAL_301,
-}
-
-#[derive(Debug, Deserialize, Serialize)]
-enum CharacterCurveType {
-	GROW_CURVE_HP_S4,
-	GROW_CURVE_ATTACK_S4,
-	GROW_CURVE_HP_S5,
-	GROW_CURVE_ATTACK_S5,
-}
-
-#[derive(Debug, Deserialize, Serialize)]
-enum EnemyCurveType {
-	GROW_CURVE_HP,
-	GROW_CURVE_ATTACK,
-	GROW_CURVE_DEFENSE,
-	GROW_CURVE_KILL_EXP,
-	GROW_CURVE_HP_LITTLEMONSTER,
-	GROW_CURVE_MHP,
-	GROW_CURVE_MATK,
-	GROW_CURVE_HP_2,
-	GROW_CURVE_ATTACK_2,
-}
-
-#[derive(Debug, Deserialize, Serialize)]
-struct CharacterCurves {
-	GROW_CURVE_HP_S4: f32,
-	GROW_CURVE_ATTACK_S4: f32,
-	GROW_CURVE_HP_S5: f32,
-	GROW_CURVE_ATTACK_S5: f32,
-}
-
-#[derive(Debug, Deserialize, Serialize)]
-struct WeaponCurves {
-	GROW_CURVE_ATTACK_101: f32,
-	GROW_CURVE_ATTACK_102: f32,
-	GROW_CURVE_ATTACK_103: f32,
-	GROW_CURVE_ATTACK_104: f32,
-	GROW_CURVE_ATTACK_105: f32,
-	GROW_CURVE_CRITICAL_101: f32,
-	GROW_CURVE_ATTACK_201: f32,
-	GROW_CURVE_ATTACK_202: f32,
-	GROW_CURVE_ATTACK_203: f32,
-	GROW_CURVE_ATTACK_204: f32,
-	GROW_CURVE_ATTACK_205: f32,
-	GROW_CURVE_CRITICAL_201: f32,
-	GROW_CURVE_ATTACK_301: f32,
-	GROW_CURVE_ATTACK_302: f32,
-	GROW_CURVE_ATTACK_303: f32,
-	GROW_CURVE_ATTACK_304: f32,
-	GROW_CURVE_ATTACK_305: f32,
-	GROW_CURVE_CRITICAL_301: f32,
-}
-
-#[derive(Debug, Deserialize, Serialize)]
-struct EnemyCurves {
-	GROW_CURVE_HP: f32,
-	GROW_CURVE_ATTACK: f32,
-	GROW_CURVE_DEFENSE: f32,
-	GROW_CURVE_KILL_EXP: f32,
-	GROW_CURVE_HP_LITTLEMONSTER: f32,
-	GROW_CURVE_MHP: f32,
-	GROW_CURVE_MATK: f32,
-	GROW_CURVE_HP_2: f32,
-	GROW_CURVE_ATTACK_2: f32,
-}
-
-#[derive(Debug, Deserialize, Serialize)]
-struct CurveDB {
-	// todo: do I really have to use hashmap? the db json uses (int-as-string, value) pairs to represent an array
-	characters:  HashMap<i64, CharacterCurves>,//[CharacterCurves; 100],
-	weapons:  HashMap<i64, WeaponCurves>,//[WeaponCurves; 100],
-	enemies:  HashMap<i64, EnemyCurves>,//[EnemyCurves; 200],
-}
-
-#[derive(Debug, Deserialize, Serialize)]
-struct StatsDB {
-	characters: serde_json::Value, 
-	weapons: serde_json::Value, 
-	talents: serde_json::Value, 
-	enemies: serde_json::Value, 
-}
-
-enum SpecializedKey {
-	FIGHT_PROP_CRITICAL_HURT,
-	FIGHT_PROP_HEAL_ADD,
-	FIGHT_PROP_ATTACK_PERCENT,
-	FIGHT_PROP_ELEMENT_MASTERY,
-	FIGHT_PROP_HP_PERCENT,
-	FIGHT_PROP_CHARGE_EFFICIENCY,
-	FIGHT_PROP_CRITICAL,
-	FIGHT_PROP_PHYSICAL_ADD_HURT,
-	FIGHT_PROP_ELEC_ADD_HURT,
-	FIGHT_PROP_ROCK_ADD_HURT,
-	FIGHT_PROP_FIRE_ADD_HURT,
-	FIGHT_PROP_WATER_ADD_HURT,
-	FIGHT_PROP_DEFENSE_PERCENT,
-	FIGHT_PROP_ICE_ADD_HURT,
-	FIGHT_PROP_WIND_ADD_HURT,
-	FIGHT_PROP_GRASS_ADD_HURT,
-}
-
-struct PromotionEntry {
-	maxlevel: i32,
-	hp: f32,
-	attack: f32,
-	defense: f32,
-	specialized: f32,
-}
-
-// TODO
-#[derive(Debug, Deserialize, Serialize)]
-struct CharacterEntry {
-	base: serde_json::Value,
-	curve: serde_json::Value,
-	specialized: serde_json::Value,
-	promotion: serde_json::Value//PromotionEntry,
-}
-
-// todo: all fields are Value until I can decide what they really are
-#[derive(Debug, Deserialize, Serialize)]
-struct GenshinDatabase {
-	data: serde_json::Value,
-	image: serde_json::Value,
-	curve: CurveDB,// todo
-	version: serde_json::Value,
-	index: serde_json::Value,
-	stats: StatsDB,
-	url: serde_json::Value,
-}
 
 
 // ****** MY STRUCTS
@@ -340,8 +131,9 @@ fn setField(statBlock: &mut StatBlock, key: StatKey, val: f32) {
 	}
 }
 
-fn getMainstatValue(mainStatKey: StatKey, level: i8) {
-
+fn getMainstatValue(mainStatKey: StatKey, level: i8) -> f32 {
+	let _ = (mainStatKey, level);
+	todo!()
 }
 
 fn statBlockFromGoodArtifact(goodArtifact: &Artifact) -> StatBlock {
@@ -422,10 +214,14 @@ fn calcDefenceMult(defence: f32, attackerLevel: f32) -> f32 {
 }
 
 fn calcResistMult(resistance: f32) -> f32 {
-	match resistance {
-		x if x < 0.0 	=> 1.0 - (resistance / 2.0),
-		x if x >= 0.75 	=> 1.0 / (4.0 * resistance + 1.0),
-		_ 				=> 1.0 - resistance,
+	if resistance < 0.0 {
+		1.0 - (resistance / 2.0)
+	}
+	else if resistance >= 0.75 {
+		1.0 / (4.0 * resistance + 1.0)
+	}
+	else {
+		1.0 - resistance
 	}
 }
 
@@ -443,7 +239,7 @@ fn main() -> std::io::Result<()> {
 	// parse artifact JSON
 	let artifactPath = "./data/2023-01-15 15-31-44.ocr3.json";
 	let artifactJsonString = readFile(artifactPath);
-	let goodData: GOODData = serde_json::from_str(&artifactJsonString).expect("parsing artifacts");
+	let goodData: GOOD_Data = serde_json::from_str(&artifactJsonString).expect("parsing artifacts");
 	println!("First artifact is: {}", serde_json::to_string(&goodData.artifacts[0])?);
 
 	// select 5 star artis only
@@ -509,6 +305,7 @@ fn main() -> std::io::Result<()> {
 	let db: GenshinDatabase = serde_json::from_str(&dbJsonString).expect("parsing GenshinDatabase JSON");
 	println!("{}", db.stats.weapons["dullblade"]["base"]["attack"]);
 	println!("{}", db.curve.characters[&1].GROW_CURVE_HP_S4);
+	println!("{:?}", db.stats.characters["diluc"]);
 	let foo = &db.curve.characters[&1]; // todo: learn borrowing
 	println!("{}", foo.GROW_CURVE_HP_S4);
 	match db.curve.characters.get(&0) {

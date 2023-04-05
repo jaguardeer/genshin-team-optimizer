@@ -250,44 +250,6 @@ fn main() -> std::io::Result<()> {
 	for (k, v) in &artifacts {
 		println!("{k:?}: {:?}", v.len());
 	}
-	/*
-	//let x = artifacts.get(&SlotKey::sands).unwrap();
-	//println!("{:?}", x[0]);
-	// calc combinations BIG todo
-	use std::time::{Instant};
-	let startTime = Instant::now();
-	let mut i: usize = 0;
-	let mut bestStats = StatBlock::default();
-	for s in &artifacts[&SlotKey::sands] {
-		for c in &artifacts[&SlotKey::circlet] {
-			for p in &artifacts[&SlotKey::plume] {
-				for f in &artifacts[&SlotKey::flower] {
-					for g in &artifacts[&SlotKey::goblet] {
-						let stats = *s + *c + *p + *f + *g;
-						if stats.atk_ > bestStats.atk {
-							bestStats = stats;
-						}
-						i += 1;
-						if i % 100_000_000 == 0 { println!("{i}") }
-					}
-				}
-			}
-		}
-	}
-	println!("{:?}", bestStats);
-	println!("{i} combinations took {:.7}", startTime.elapsed().as_secs_f64());
-	*/
-	/*
-	let artiGroups: HashMap<_, Vec<_>> = artifacts.iter()
-		.group_by(|arti| arti.slotKey)
-        .into_iter()
-		.map(|(ge0, group)| (ge0, group.cloned().collect()))
-    	.collect();
-	println!("{:?}", artiGroups);
-	*/
-	// test StatBlock stuff
-	//let x = statBlockFromGoodArtifact(&goodData.artifacts[0]);
-	//println!("{:?}", x);
 
 	// parse db JSON 
 	let db_path = "./data/data.min.json";
@@ -298,12 +260,12 @@ fn main() -> std::io::Result<()> {
 	println!("{}", db.stats.weapons["dullblade"]["base"]["attack"]);
 	println!("{}", db.curve.characters[&1].GROW_CURVE_HP_S4);
 	println!("{:?}", db.stats.characters["diluc"]);
+	// access in bounds
 	let foo = &db.curve.characters[&1]; // todo: learn borrowing
 	println!("{}", foo.GROW_CURVE_HP_S4);
-	match db.curve.characters.get(&0) {
-		None => panic!("couldn't get it"),
-		Some(curve) => println!("val is {}", curve.GROW_CURVE_HP_S4),
-	}
+	// try to access out of bounds
+	let test_curve = db.curve.characters.get(&0).expect("getting db.curve.characters[0]");
+	println!("test_curve is {:?}", test_curve);
 
 	Ok(())
 }
